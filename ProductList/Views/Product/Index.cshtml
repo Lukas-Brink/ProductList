@@ -20,8 +20,8 @@
 </style>
 <br />
 <div class="row">
-    <div class="col-md-4">
-        <!-- (a) Supplier -->
+    <!-- Column 1: Dropdowns -->
+    <div class="col-md-6">
         <div class="mb-3">
             <label for="supplierDropdown" class="form-label">Supplier:</label>
             @Html.DropDownListFor(model => model.SelectedSupplierId,
@@ -29,8 +29,6 @@
                 "Select a supplier",
                 new { @id = "supplierDropdown", @class = "form-select" })
         </div>
-
-        <!-- (b) Category -->
         <div class="mb-3">
             <label for="categoryDropdown" class="form-label">Category:</label>
             @Html.DropDownListFor(model => model.SelectedCategoryId,
@@ -38,8 +36,6 @@
                 "Select a category",
                 new { @id = "categoryDropdown", @class = "form-select", disabled = "disabled" })
         </div>
-
-        <!-- (c) Product -->
         <div class="mb-3">
             <label for="productDropdown" class="form-label">Product:</label>
             @Html.DropDownListFor(model => model.SelectedProductId,
@@ -47,39 +43,26 @@
                 "Select a product",
                 new { @id = "productDropdown", @class = "form-select", disabled = "disabled" })
         </div>
+    </div>
 
-        <!-- (d) Serial -->
+    <!-- Column 2: Serial, Value, Add Button -->
+    <div class="col-md-6">
         <div class="mb-3">
             <label for="serialTextbox" class="form-label">Serial:</label>
             <input type="text" id="serialTextbox" class="form-control" placeholder="Only numbers are allowed" disabled />
             <small class="text-danger" style="display:none;">Only numeric values are allowed.</small>
         </div>
-
-        <!-- (e) Value -->
         <div class="mb-3">
-            <label for="valueTextbox" class="form-label">Value:</label>
-            <input type="text" id="valueTextbox" class="form-control" placeholder="Only numbers are allowed" disabled />
-            <small class="text-danger" style="display:none;">Only numeric values are allowed.</small>
+            <label for="productNameTextbox" class="form-label">Value:</label>
+            <input type="text" id="productNameTextbox" class="form-control" placeholder="Only numbers are allowed" disabled />
         </div>
-
-        <!-- (f) Add button -->
-        <div class="mb-3 d-grid gap-2" style="padding-top: 10px;">
+        <div class="mb-3 d-grid gap-2">
             <input type="button" id="addProductButton" value="Add" class="btn btn-primary" />
         </div>
     </div>
-
 </div>
 
-<div class="col-md-4">
-    <div style="max-height: 300px; overflow-y: auto;">
-        <table class="table table-sm" id="rawData">
-            <thead style="position: sticky; top: 0; background-color: lightgrey;">
-            <tbody>
-            </tbody>
-        </table>
-    </div>
-</div>
-
+<!-- Product Table Section -->
 <div style="height: 300px; overflow-y: scroll;">
     <table class="table table-condensed" id="productTable">
         <thead style="position: sticky; top: 0; background-color: lightgrey;">
@@ -97,8 +80,10 @@
     </table>
 </div>
 
+
 @section Scripts {
     <script>
+
         // ----------------------------------------------------------------------
         // CONTROL TEXTBOX INPUT
         // ----------------------------------------------------------------------
@@ -120,100 +105,98 @@
             }
         });
 
-                // ----------------------------------------------------------------------
+
+
+        $("#serialTextbox").on("input", function () {
+            var value = $(this).val().replace(/\D/g, '');
+
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+
+            $(this).val(value);
+
+            if (value.length >= 1) {
+                $("#productNameTextbox").prop("disabled", false);
+            } else {
+                $("#productNameTextbox").prop("disabled", true).val("");
+            }
+        });
+
+
+
+        $("#productNameTextbox").on("input", function () {
+            var value = $(this).val().replace(/\D/g, '');
+
+            if (value.length >= 1) {
+                $("#addProductButton").prop("disabled", false);
+            } else {
+                $("#addProductButton").prop("disabled", true);
+            }
+        });
+
+
+
+        // ----------------------------------------------------------------------
         // POPULATE DROPDOWNS
         // ----------------------------------------------------------------------
-$(function DropDownPopulater() {
 
-    // Initial state
-    $("#serialTextbox").prop("disabled", true);
-    $("#valueTextbox").prop("disabled", true);
-    $("#categoryDropdown").prop("disabled", true);
-    $("#productDropdown").prop("disabled", true);
+        $(function DropDownPopulater() {
 
-    // ------------------------------
-    // 1. SUPPLIER logic
-    // ------------------------------
+            $("#productNameTextbox").prop("disabled", true);
+            $("#categoryDropdown").prop("disabled", true);
+            $("#productDropdown").prop("disabled", true);
+            $("#productNameTextbox").prop("disabled", true);
+            $("#serialTextbox").prop("disabled", true);
+            $("#addProductButton").prop("disabled", true);
+
+               // Supplier logic
     $("#supplierDropdown").change(function () {
         var supplierId = $(this).val();
         if (supplierId) {
-            $("#categoryDropdown").val("").prop("disabled", false);
-            $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-            $("#serialTextbox").val("").prop("disabled", true);
-            $("#valueTextbox").val("").prop("disabled", true);
+            $("#categoryDropdown").prop("disabled", false);
         } else {
             $("#categoryDropdown").val("").prop("disabled", true);
             $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-            $("#serialTextbox").val("").prop("disabled", true);
-            $("#valueTextbox").val("").prop("disabled", true);
+            $("#productNameTextbox").val("").prop("disabled", true);
         }
     });
 
-    // ------------------------------
-    // 2. CATEGORY logic
-    // ------------------------------
-    $("#categoryDropdown").change(function () {
-        var categoryId = $(this).val();
-        if (categoryId) {
-            $.get('@Url.Action("GetProductsByCategory", "Product")', { categoryId: categoryId })
-                .done(function (data) {
-                    var productNames = data.split(";")[0].split(",");
-                    var productIds = data.split(";")[1].split(",");
 
-                    var productDropdown = $("#productDropdown");
-                    productDropdown.empty();
-                    productDropdown.append($("<option></option>").val("").text("Select a product"));
+        $("#categoryDropdown").change(function () {
+            var categoryId = $(this).val();
+            if (categoryId) {
+                $.get('@Url.Action("GetProductsByCategory", "Product")', { categoryId: categoryId })
+                    .done(function (data) {
+                        var productNames = data.split(";")[0].split(",");
+                        var productIds = data.split(";")[1].split(",");
+                        var products = [];
+                        for (var i = 0; i < productNames.length; i++) {
+                            products.push({ id: productIds[i], name: productNames[i] });
+                        }
 
-                    for (var i = 0; i < productNames.length; i++) {
-                        productDropdown.append($("<option></option>").val(productIds[i]).text(productNames[i]));
-                    }
+                        var productDropdown = $("#productDropdown");
+                        productDropdown.empty();
+                        productDropdown.append($("<option></option>").val("").text("Select a product"));
+                        $.each(products, function (i, product) {
+                            productDropdown.append($("<option></option>").val(product.id).text(product.name));
+                        });
+                        productDropdown.prop("disabled", false);
+                    });
+            } else {
+                $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
+                $("#productNameTextbox").prop("disabled", true);
+            }
+        });
 
-                    productDropdown.prop("disabled", false);
-                    $("#serialTextbox").val("").prop("disabled", true);
-                    $("#valueTextbox").val("").prop("disabled", true);
-                });
-        } else {
-            $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-            $("#serialTextbox").val("").prop("disabled", true);
-            $("#valueTextbox").val("").prop("disabled", true);
-        }
-    });
-
-    // ------------------------------
-    // 3. PRODUCT logic
-    // ------------------------------
-    $("#productDropdown").change(function () {
-        if ($(this).val()) {
-            $("#serialTextbox").val("").prop("disabled", false);
-            $("#valueTextbox").val("").prop("disabled", true);
-        } else {
-            $("#serialTextbox").val("").prop("disabled", true);
-            $("#valueTextbox").val("").prop("disabled", true);
-        }
-    });
-
-    // ------------------------------
-    // 4. SERIAL input logic
-    // Enable valueTextbox when 6 digits are entered
-    // ------------------------------
-    $("#serialTextbox").on("input", function () {
-        var value = this.value.replace(/\D/g, '').slice(0, 6);
-        this.value = value;
-
-        if (value.length === 6) {
-            $("#valueTextbox").prop("disabled", false);
-        } else {
-            $("#valueTextbox").val("").prop("disabled", true);
-        }
-    });
-
-    // ------------------------------
-    // Restrict both textboxes to numeric only and 6 digits max
-    // ------------------------------
-    restrictInputToSixDigitNumbers(document.getElementById("serialTextbox"));
-    restrictInputToSixDigitNumbers(document.getElementById("valueTextbox"));
-});
-
+        $("#productDropdown").change(function () {
+            $("#addProductSection").show();
+            if ($("#categoryDropdown").val() && $("#productDropdown").val()) {
+                $("#serialTextbox").prop("disabled", false);
+            } else {
+                $("#serialTextbox").prop("disabled", true);
+            }
+        });
 
         // ----------------------------------------------------------------------
         // ADD BUTTON
@@ -258,19 +241,21 @@ $(function DropDownPopulater() {
 
                             productTable.append(newRow);
 
+                            $("#serialTextbox").val("").prop("disabled", true);
+
                             $("#productNameTextbox").val("");
 
                             $("#productNameTextbox").prop("disabled", true);
 
                             $("#productDropdown").prop("disabled", true);
 
-                            $("#categoryDropdown").val("");
+                            $("#categoryDropdown").val("").prop("disabled", true);
 
                             $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
 
                             $("#productNameTextbox").prop("disabled", true);
 
-                            $("#categoryDropdown").focus();
+                            $("#supplierDropdown").focus();
 
                             // ----------------------------------------------------------------------
                             // RAW DATA DEMO CODE ---- Not part of the project!!!! ----

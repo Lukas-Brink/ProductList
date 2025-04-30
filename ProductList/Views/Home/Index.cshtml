@@ -1,0 +1,20 @@
+﻿<table>
+    <tr>
+        <td><img src="~/images/YourPhoto.jpg" alt="Your Name" width="150" /></td>
+        <td>
+            <strong>Name:</strong>    YourFirstName<br />
+            <strong>Surname:</strong> YourSurname<br />
+            <strong>Student #:</strong> YourStudentNumber
+        </td>
+    </tr>
+</table>
+
+<h2>Steps I Followed</h2>
+<ul>
+    <li><strong>Models:</strong> Updated Category.cs, Product.cs, ProductRepository.cs, ProductViewModel.cs; created Supplier.cs.</li>
+    <li><strong>Data:</strong> Seeded 3 suppliers, 9 categories, 16 products with no overlapping references.</li>
+    <li><strong>Product/Index View:</strong> Added Supplier, Category, Product dropdowns; Value and new Serial textbox; arranged controls into two columns.</li>
+    <li><strong>jQuery:</strong> Implemented sequential enable/disable; updated AJAX calls for cascading dropdowns; rewrote Add/Edit/Save/Delete to target per-row IDs.</li>
+    <li><strong>Controller:</strong> Extended ProductController with `GetCategoriesBySupplier`, `GetProductsByCategory`, and a new action for `Serial` data.</li>
+    <!-- etc. -->
+</ul>

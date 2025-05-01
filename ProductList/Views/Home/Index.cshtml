@@ -1,20 +1,97 @@
-﻿<table>
-    <tr>
-        <td><img src="~/images/YourPhoto.jpg" alt="Your Name" width="150" /></td>
-        <td>
-            <strong>Name:</strong>    YourFirstName<br />
-            <strong>Surname:</strong> YourSurname<br />
-            <strong>Student #:</strong> YourStudentNumber
-        </td>
-    </tr>
-</table>
+﻿<!-- In your <head> or site-wide CSS -->
+<style>
+    .main-layout {
+        display: flex;
+        gap: 2rem;
+        align-items: stretch;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
 
-<h2>Steps I Followed</h2>
-<ul>
-    <li><strong>Models:</strong> Updated Category.cs, Product.cs, ProductRepository.cs, ProductViewModel.cs; created Supplier.cs.</li>
-    <li><strong>Data:</strong> Seeded 3 suppliers, 9 categories, 16 products with no overlapping references.</li>
-    <li><strong>Product/Index View:</strong> Added Supplier, Category, Product dropdowns; Value and new Serial textbox; arranged controls into two columns.</li>
-    <li><strong>jQuery:</strong> Implemented sequential enable/disable; updated AJAX calls for cascading dropdowns; rewrote Add/Edit/Save/Delete to target per-row IDs.</li>
-    <li><strong>Controller:</strong> Extended ProductController with `GetCategoriesBySupplier`, `GetProductsByCategory`, and a new action for `Serial` data.</li>
-    <!-- etc. -->
-</ul>
+    .card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .student-card {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+        .student-card img {
+            border-radius: 50%;
+            object-fit: cover;
+            width: 170px;
+            height: 170px;
+            border: 2px solid #ddd;
+        }
+
+    .student-details dt {
+        font-weight: 600;
+        color: #444;
+    }
+
+    .student-details dd {
+        margin: 0 0 0.75rem 0;
+        color: #666;
+    }
+
+    .steps h2 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .steps ul {
+        list-style: inside disc;
+        padding-left: 0;
+        color: #555;
+    }
+
+        .steps ul li {
+            margin-bottom: 0.75rem;
+        }
+
+            .steps ul li strong {
+                color: #222;
+            }
+
+    /* Responsive fallback */
+    @@media (max-width: 768px) {
+        .main-layout {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<!-- In your <body> -->
+<div class="main-layout">
+    <div class="card student-card">
+        <img src="~/images/me.jpg" alt="Lukas Brink" />
+        <dl class="student-details">
+            <dt>Name:</dt>
+            <dd>Lukas</dd>
+            <dt>Surname:</dt>
+            <dd>Brink</dd>
+            <dt>Student #:</dt>
+            <dd>u24616185</dd>
+        </dl>
+    </div>
+
+    <div class="card steps">
+        <h2>Steps I Followed</h2>
+        <ul>
+            <li><strong>Models:</strong> Updated Category.cs, Product.cs, ProductRepository.cs, ProductViewModel.cs; created Supplier.cs with <em>ID</em> and <em>Name</em> properties.</li>
+            <li><strong>Data:</strong> Added 3 suppliers to the repository; edited categories and products lists with mock data.</li>
+            <li><strong>Product/Index View:</strong> Placed student info on Home Index; added Supplier dropdown and new Serial textbox; arranged controls into two columns; updated table columns.</li>
+            <li><strong>jQuery:</strong> Implemented sequential enable/disable; updated AJAX calls for cascading dropdowns; generated unique row IDs; rewrote Add/Edit/Save/Delete handlers to target per-row IDs and include new fields.</li>
+            <li><strong>Controller:</strong> Extended ProductController with <code>GetCategoriesBySupplier</code> and a new action for handling Serial data.</li>
+        </ul>
+    </div>
+</div>

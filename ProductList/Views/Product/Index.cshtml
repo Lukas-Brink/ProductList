@@ -17,31 +17,61 @@
     div[style*="max-height"]::-webkit-scrollbar-track {
         background-color: rgba(255, 255, 255, 0.1);
     }
+
+    /* Make Edit & Delete the same width */
+    #productTable .btn-edit,
+    #productTable .btn-delete {
+        display: inline-block;
+        width: 70px; /* adjust to taste */
+        text-align: center;
+    }
+
+    /* Make each column a vertical flex-container, and space items out */
+    .align-form-cols > .col-md-6 {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 </style>
 <br />
-<div class="row">
+<div class="row align-form-cols">
+
     <!-- Column 1: Dropdowns -->
     <div class="col-md-6">
         <div class="mb-3">
             <label for="supplierDropdown" class="form-label">Supplier:</label>
             @Html.DropDownListFor(model => model.SelectedSupplierId,
-                new SelectList(Model.Suppliers, "Id", "Name"),
-                "Select a supplier",
-                new { @id = "supplierDropdown", @class = "form-select" })
+                                                                                      new SelectList(Model.Suppliers, "Id", "Name"),
+                                                                                      "Select a supplier",
+                                                                                      new
+                                                                                      {
+                                                                                          id = "supplierDropdown",
+                                                                                          @class = "form-select"
+                                                                                      })
         </div>
         <div class="mb-3">
             <label for="categoryDropdown" class="form-label">Category:</label>
             @Html.DropDownListFor(model => model.SelectedCategoryId,
-                new SelectList(Model.Categories, "Id", "Name"),
-                "Select a category",
-                new { @id = "categoryDropdown", @class = "form-select", disabled = "disabled" })
+                                                                                      new SelectList(Model.Categories, "Id", "Name"),
+                                                                                      "Select a category",
+                                                                                      new
+                                                                                      {
+                                                                                          id = "categoryDropdown",
+                                                                                          @class = "form-select",
+                                                                                          disabled = "disabled"
+                                                                                      })
         </div>
         <div class="mb-3">
             <label for="productDropdown" class="form-label">Product:</label>
             @Html.DropDownListFor(model => model.SelectedProductId,
-                Enumerable.Empty<SelectListItem>(),
-                "Select a product",
-                new { @id = "productDropdown", @class = "form-select", disabled = "disabled" })
+                                                                                      Enumerable.Empty<SelectListItem>(),
+                                                                                      "Select a product",
+                                                                                      new
+                                                                                      {
+                                                                                          id = "productDropdown",
+                                                                                          @class = "form-select",
+                                                                                          disabled = "disabled"
+                                                                                      })
         </div>
     </div>
 
@@ -68,9 +98,11 @@
         <thead style="position: sticky; top: 0; background-color: lightgrey;">
             <tr>
                 <th style="width: 5%;">ID</th>
+                <th style="width: 20%;">Supplier</th>
                 <th style="width: 20%;">Category</th>
                 <th style="width: 20%;">Product</th>
-                <th style="width: 20%;">Value</th>
+                <th style="width: 15%;">Serial</th>
+                <th style="width: 10%;">Value</th>
                 <th style="width: 20%;">Timestamp</th>
                 <th style="width: 15%;">ACTION</th>
             </tr>
@@ -80,258 +112,294 @@
     </table>
 </div>
 
-
 @section Scripts {
     <script>
+        $(document).ready(function () {
+            // INITIAL STATE
+            $("#supplierDropdown").prop("disabled", false);
+            $("#categoryDropdown, #productDropdown, #serialTextbox, #productNameTextbox, #addProductButton")
+                .prop("disabled", true);
 
-        // ----------------------------------------------------------------------
-        // CONTROL TEXTBOX INPUT
-        // ----------------------------------------------------------------------
-
-        var input = document.getElementById("productNameTextbox");
-        var warning = document.querySelector("#productNameTextbox + small");
-
-        input.addEventListener("input", function () {
-            var value = this.value.replace(/\D/g, '');
-            if (value.length > 6) {
-                value = value.slice(0, 6);
+            // Utility resets
+            function resetDown() {
+                $("#categoryDropdown").val("").prop("disabled", true);
+                resetMid();
             }
-            this.value = value;
-
-            if (value.length !== this.value.length) {
-                warning.style.display = "block";
-            } else {
-                warning.style.display = "none";
+            function resetMid() {
+                $("#productDropdown")
+                    .empty()
+                    .append('<option value="">Select a product</option>')
+                    .prop("disabled", true);
+                resetTail();
             }
-        });
+            function resetTail() { $("#addProductButton").prop("disabled", true); }
 
+            // 1) SUPPLIER → CATEGORY (Main form)
+            $("#supplierDropdown").on("change", function () {
+                var supplierId = $(this).val();
+                resetDown();  // Reset everything downstream
 
+                if (!supplierId) return;
 
-        $("#serialTextbox").on("input", function () {
-            var value = $(this).val().replace(/\D/g, '');
+                // Enable and populate category dropdown
+                $("#categoryDropdown")
+                    .prop("disabled", false)
+                    .empty()
+                    .append('<option value="">Select a category</option>');
 
-            if (value.length > 10) {
-                value = value.slice(0, 10);
-            }
-
-            $(this).val(value);
-
-            if (value.length >= 1) {
-                $("#productNameTextbox").prop("disabled", false);
-            } else {
-                $("#productNameTextbox").prop("disabled", true).val("");
-            }
-        });
-
-
-
-        $("#productNameTextbox").on("input", function () {
-            var value = $(this).val().replace(/\D/g, '');
-
-            if (value.length >= 1) {
-                $("#addProductButton").prop("disabled", false);
-            } else {
-                $("#addProductButton").prop("disabled", true);
-            }
-        });
-
-
-
-        // ----------------------------------------------------------------------
-        // POPULATE DROPDOWNS
-        // ----------------------------------------------------------------------
-
-        $(function DropDownPopulater() {
-
-            $("#productNameTextbox").prop("disabled", true);
-            $("#categoryDropdown").prop("disabled", true);
-            $("#productDropdown").prop("disabled", true);
-            $("#productNameTextbox").prop("disabled", true);
-            $("#serialTextbox").prop("disabled", true);
-            $("#addProductButton").prop("disabled", true);
-
-               // Supplier logic
-    $("#supplierDropdown").change(function () {
-        var supplierId = $(this).val();
-        if (supplierId) {
-            $("#categoryDropdown").prop("disabled", false);
-        } else {
-            $("#categoryDropdown").val("").prop("disabled", true);
-            $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-            $("#productNameTextbox").val("").prop("disabled", true);
-        }
-    });
-
-
-        $("#categoryDropdown").change(function () {
-            var categoryId = $(this).val();
-            if (categoryId) {
-                $.get('@Url.Action("GetProductsByCategory", "Product")', { categoryId: categoryId })
+                $.get('@Url.Action("GetCategoriesBySupplier", "Product")', { supplierId: supplierId })
                     .done(function (data) {
-                        var productNames = data.split(";")[0].split(",");
-                        var productIds = data.split(";")[1].split(",");
-                        var products = [];
-                        for (var i = 0; i < productNames.length; i++) {
-                            products.push({ id: productIds[i], name: productNames[i] });
-                        }
-
-                        var productDropdown = $("#productDropdown");
-                        productDropdown.empty();
-                        productDropdown.append($("<option></option>").val("").text("Select a product"));
-                        $.each(products, function (i, product) {
-                            productDropdown.append($("<option></option>").val(product.id).text(product.name));
-                        });
-                        productDropdown.prop("disabled", false);
-                    });
-            } else {
-                $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-                $("#productNameTextbox").prop("disabled", true);
-            }
-        });
-
-        $("#productDropdown").change(function () {
-            $("#addProductSection").show();
-            if ($("#categoryDropdown").val() && $("#productDropdown").val()) {
-                $("#serialTextbox").prop("disabled", false);
-            } else {
-                $("#serialTextbox").prop("disabled", true);
-            }
-        });
-
-        // ----------------------------------------------------------------------
-        // ADD BUTTON
-        // ----------------------------------------------------------------------
-
-            $("#addProductButton").click(function () {
-                var productId = $("#productDropdown").val();
-                var productName = $("#productNameTextbox").val();
-                if (productId && productName) {
-                    $.get('@Url.Action("AddProduct", "Product")', { productId: productId, productName: productName })
-                        .done(function (data) {
-                        if (data === "OK") {
-                            var productTable = $("#productTable tbody");
-                            var newRow = $("<tr></tr>");
-
-                            newRow.append($("<td></td>").text(productId));
-
-                        // NEW TABLE DropDown Targets
-                        // ----------------------------------------------------------------------
-
-                            newRow.append($("<td></td>").append(
-                                $("<select></select>").addClass("form-select").prop("disabled", true)
-                                    .append($("<option></option>").val($("#categoryDropdown").val()).text($("#categoryDropdown option:selected").text()))));
-
-                            newRow.append($("<td></td>").append(
-                                $("<select></select>").addClass("form-select").prop("disabled", true)
-                                    .append($("<option></option>").val(productId).text($("#productDropdown option:selected").text()))));
-
-                        // ----------------------------------------------------------------------
-
-                        // ----------------------------------------------------------------------
-
-                            newRow.append($("<td></td>").append($("<input>").prop("type", "text").addClass("form-control").prop("disabled", true).val(productName)));
-                            newRow.append($("<td></td>").text(new Date().toLocaleString()));
-                            newRow.append($("<td></td>").append(
-                                $("<button></button>").text("EDIT").addClass("btn btn-success btn-sm").click(function () {
-                                }).css({ "width": "50%", "padding-right": "10px" }),
-                                $("<button></button>").text("DELETE").addClass("btn btn-danger btn-sm").click(function () {
-                                    $(this).closest("tr").remove();
-                                }).css({ "width": "50%" }))
-                            );
-
-                            productTable.append(newRow);
-
-                            $("#serialTextbox").val("").prop("disabled", true);
-
-                            $("#productNameTextbox").val("");
-
-                            $("#productNameTextbox").prop("disabled", true);
-
-                            $("#productDropdown").prop("disabled", true);
-
-                            $("#categoryDropdown").val("").prop("disabled", true);
-
-                            $("#productDropdown").empty().append($("<option></option>").val("").text("Select a product")).prop("disabled", true);
-
-                            $("#productNameTextbox").prop("disabled", true);
-
-                            $("#supplierDropdown").focus();
-
-                            // ----------------------------------------------------------------------
-                            // RAW DATA DEMO CODE ---- Not part of the project!!!! ----
-                            // ----------------------------------------------------------------------
-                            var rawData = $("#rawData tbody");
-                            var newRow = $("<tr></tr>");
-                            newRow.append($("<td></td>").text(JSON.stringify({ productId: productId, productName: productName })));
-                            rawData.append(newRow);
-                            // ----------------------------------------------------------------------
-                            // ----------------------------------------------------------------------
-                        } else {
-                            alert("Failed to add product.");
+                        var parts = data.split(";"), names = parts[0].split(","), ids = parts[1].split(",");
+                        for (var i = 0; i < names.length; i++) {
+                            $("#categoryDropdown").append($('<option>').val(ids[i]).text(names[i]));
                         }
                     });
-                }
-
-        // ----------------------------------------------------------------------
-        // EDIT BUTTON
-        // ----------------------------------------------------------------------
-
-            $(document).on("click", ".btn-success", function () {
-
-                // HTML Load controls disabled.
-                // -------------------------------------------
-                $("#categoryDropdown").prop("disabled", true);
-                $("#productDropdown").prop("disabled", true);
-                $("#productNameTextbox").prop("disabled", true);
-
-                $(".btn-success").prop("disabled", true);
-
-                var currentRow = $(this).closest("tr");
-                currentRow.find(":input").not(":disabled").prop("disabled", true);
-                currentRow.find(":input").prop("disabled", false);
-                currentRow.find(".btn-danger").prop("disabled", true);
-
-                // Disable dropdowns in the row
-                currentRow.find(".form-select").prop("disabled", true);
-
-                currentRow.find(":input[type=text]").prop("disabled", false);
-                currentRow.find(":input[type=text]").each(function () {
-                    $(this).on("input", function () {
-                        var value = this.value.replace(/\D/g, '');
-                        if (value.length > 6) {
-                            value = value.slice(0, 6);
-                        }
-                        this.value = value;
-                    });
-                });
-
-        // ----------------------------------------------------------------------
-        // SAVE BUTTON
-        // ----------------------------------------------------------------------
-                $(this).text("SAVE").removeClass("btn-success").addClass("btn-primary");
-                $(".btn-danger").prop("disabled", true);
-                $("form :input:not(.row-edit :input)").not(":disabled").addClass("disabled").prop("disabled", true);
-                $(document).one("click", ".btn-primary", function () {
-                    currentRow.find(":input").prop("disabled", true);
-                    currentRow.find(".btn-danger").prop("disabled", false);
-                    $(this).text("EDIT").removeClass("btn-primary").addClass("btn-success");
-                    currentRow.find(":input[type=text]").prop("disabled", true);
-                    currentRow.find(":input[type=text]").off("input");
-                    $(".btn-success").not(this).prop("disabled", false);
-                    $(this).prop("disabled", false);
-
-                    // HTML Load controls disabled.
-                    // -------------------------------------------
-                    $(".btn-danger").prop("disabled", false);
-                    $("#categoryDropdown").prop("disabled", false)
-
-                    $("form :input:not(.row-edit :input)").not(":disabled").removeClass("disabled").prop("disabled", false);
-
-                });
             });
 
-        });
-    });
-    </script>
+    // Unified handler: supplier change in table row → reset & load categories
+$("#productTable").on("change", "select[id$='_supplier']", function () {
+  var $row = $(this).closest("tr");
+  var rid = $row.attr("id");
+  var supplierId = $(this).val();
 
+  // Reset category dropdown
+  var $cat = $("#" + rid + "_category");
+  $cat.val("").prop("disabled", true).empty()
+      .append('<option value="">Select a category</option>');
+
+  // Reset product dropdown
+  var $prod = $("#" + rid + "_product");
+  $prod.val("").prop("disabled", true).empty()
+      .append('<option value="">Select a product</option>');
+
+  if (!supplierId) return;
+
+  // Populate category dropdown from supplier
+  $.get('@Url.Action("GetCategoriesBySupplier", "Product")', { supplierId: supplierId })
+    .done(function (data) {
+      var parts = data.split(";"),
+          names = parts[0].split(","),
+          ids = parts[1].split(",");
+      for (var i = 0; i < names.length; i++) {
+        $cat.append($('<option>').val(ids[i]).text(names[i]));
+      }
+      $cat.prop("disabled", false);
+    });
+});
+
+    // Table-row category change → populate products via AJAX
+    $("#productTable")
+        .on(
+            "change", "select[id$='_category']", function() {
+              var $row = $(this).closest("tr");
+              var rid = $row.attr("id");
+              var $prod = $("#" + rid + "_product");
+              var catId = $(this).val();
+
+              $prod.empty()
+                  .append('<option value="">Select a product</option>')
+                  .prop("disabled", true);
+              if (!catId) return;
+
+              $.get('@Url.Action("GetProductsByCategory","Product")',
+                    {categoryId : catId})
+                  .done(function(data) {
+                    var parts = data.split(";"), names = parts[0].split(","),
+                        ids = parts[1].split(",");
+                    for (var i = 0; i < names.length; i++) {
+                      $prod.append($('<option>').val(ids[i]).text(names[i]));
+                    }
+                    $prod.prop("disabled", false);
+                  });
+            });
+
+    // 2) CATEGORY → PRODUCT (AJAX)
+    $("#categoryDropdown")
+        .on(
+            "change", function() {
+              var catId = $(this).val();
+              resetMid();
+              if (!catId) return;
+              $.get('@Url.Action("GetProductsByCategory","Product")',
+                    {categoryId : catId})
+                  .done(function(data) {
+                    var parts = data.split(";"), names = parts[0].split(","),
+                        ids = parts[1].split(",");
+                    for (var i = 0; i < names.length; i++) {
+                      $("#productDropdown")
+                          .append($('<option>').val(ids[i]).text(names[i]));
+                    }
+                    $("#productDropdown").prop("disabled", false);
+                  });
+            });
+
+    // 3) PRODUCT → SERIAL
+    $("#productDropdown")
+        .on(
+            "change", function() {
+              resetTail();
+              if ($(this).val()) {
+                $("#serialTextbox").prop("disabled", false).focus();
+              }
+            });
+
+            // 4) SERIAL → VALUE
+            $("#serialTextbox")
+                .on(
+                    "input", function () {
+                        var v = this.value.replace(/\D/g, '').slice(0, 10); // Fixed regex
+                        $(this).val(v);
+                        if (v) {
+                            $("#productNameTextbox").prop("disabled", false);
+                        } else {
+                            $("#productNameTextbox").prop("disabled", true);
+                            $("#addProductButton").prop("disabled", true);
+                        }
+                    }
+                );
+
+            // 5) VALUE → ADD
+            $("#productNameTextbox")
+                .on(
+                    "input", function () {
+                        var v = this.value.replace(/\D/g, '').slice(0, 6); // Fixed regex
+                        $(this).val(v);
+                        $("#addProductButton").prop("disabled", !v);
+                    }
+                ); // Added missing semicolon
+
+    // 6) ADD ROW with unique IDs
+    var rowCount = 0;
+    $("#addProductButton")
+        .on(
+            "click", function() {
+              rowCount++;
+              var rowId = 'row_' + rowCount,
+                  supplier = $("#supplierDropdown option:selected").text(),
+                  catVal = $("#categoryDropdown").val(),
+                  catText = $("#categoryDropdown option:selected").text(),
+                  prodVal = $("#productDropdown").val(),
+                  prodText = $("#productDropdown option:selected").text(),
+                  serial = $("#serialTextbox").val(),
+                  value = $("#productNameTextbox").val(),
+                  time = new Date().toLocaleString();
+
+              // Clone full option sets so in-row dropdowns are complete
+              var $suppClone = $("#supplierDropdown")
+                                   .clone()
+                                   .attr("id", rowId + "_supplier")
+                                   .addClass("form-select")
+                                   .prop("disabled", true)
+                                   .val($("#supplierDropdown").val());
+              var $catClone = $("#categoryDropdown")
+                                  .clone()
+                                  .attr("id", rowId + "_category")
+                                  .addClass("form-select")
+                                  .prop("disabled", true)
+                                  .val(catVal);
+              var $prodClone = $("#productDropdown")
+                                   .clone()
+                                   .attr("id", rowId + "_product")
+                                   .addClass("form-select")
+                                   .prop("disabled", true)
+                                   .val(prodVal);
+
+              // Create serial + value inputs with unique IDs
+              var $serialIn = $('<input>')
+                                  .attr({
+                                    type : 'text',
+                                    maxlength : 10,
+                                    id : rowId + '_serial'
+                                  })
+                                  .addClass('form-control')
+                                  .prop('disabled', true)
+                                  .val(serial);
+              var $valueIn =
+                  $('<input>')
+                      .attr(
+                          {type : 'text', maxlength : 6, id : rowId + '_value'})
+                      .addClass('form-control')
+                      .prop('disabled', true)
+                      .val(value);
+
+              // Build row
+              var $tr =
+                  $('<tr>')
+                      .attr('id', rowId)
+                      .append($('<td>').text(
+                          rowCount))  // Unique numeric ID in first column
+                      .append($('<td>').append($suppClone))
+                      .append($('<td>').append($catClone))
+                      .append($('<td>').append($prodClone))
+                      .append($('<td>').append($serialIn))
+                      .append($('<td>').append($valueIn))
+                      .append($('<td>').text(time))
+                      .append($('<td>').append(
+                          $('<button>')
+                              .addClass('btn btn-sm btn-edit btn-primary')
+                              .text('Edit'),
+                          ' ',
+                          $('<button>')
+                              .addClass('btn btn-sm btn-delete btn-danger')
+                              .text('Delete')));
+
+              $("#productTable tbody").append($tr);
+
+              // Reset main form
+              $("#supplierDropdown").val('');
+              resetDown();
+            });
+
+    // 7) EDIT ↔ SAVE per-row, targeting the new IDs
+    $("#productTable")
+        .on(
+            "click", ".btn-edit", function() {
+              var $btn = $(this), $row = $btn.closest("tr"),
+                  rid = $row.attr("id"), mode = $btn.text();
+
+                if (mode === "Edit") {
+                    // Reset all downstream fields
+                    $("#" + rid + "_category, #" + rid + "_product")
+                        .val("")
+                        .prop("disabled", true);
+
+                    // Enable only the supplier initially; others will enable based on change
+                    $("#" + rid + "_supplier, #" + rid + "_serial, #" + rid + "_value")
+                        .prop("disabled", false);
+
+                    $btn.text("Save")
+                        .removeClass("btn-primary")
+                        .addClass("btn-success");
+                } else {
+                    // Validation: Ensure all fields are populated
+                    let supplier = $("#" + rid + "_supplier").val(),
+                        category = $("#" + rid + "_category").val(),
+                        product = $("#" + rid + "_product").val(),
+                        serial = $("#" + rid + "_serial").val().trim(),
+                        value = $("#" + rid + "_value").val().trim();
+
+                    if (!supplier || !category || !product || !serial || !value) {
+                        alert("Please ensure all fields are filled out before saving.");
+                        return;
+                    }
+
+                    // Disable all fields on save
+                    $("#" + rid + "_supplier, #" + rid + "_category, #" + rid + "_product, #" + rid + "_serial, #" + rid + "_value")
+                        .prop("disabled", true);
+
+                    $btn.text("Edit")
+                        .removeClass("btn-success")
+                        .addClass("btn-primary");
+                }
+
+            });
+
+    // 8) DELETE per-row
+    $("#productTable")
+        .on(
+            "click", ".btn-delete",
+            function() { $(this).closest("tr").remove(); });
+
+  });
+    </script>
 }
